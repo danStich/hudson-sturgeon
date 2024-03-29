@@ -1,0 +1,46 @@
+model {
+  
+  # Priors
+  # Hyper prior for abundance
+  log(lambda) <- log_lambda
+  log_lambda ~ dnorm(0, 1)
+  
+  # Individual detection probability
+  logit_p_mu ~ dnorm(0, 0.001)
+  logit_p_tau <- 1/(logit_p_sigma * logit_p_sigma)
+  logit_p_sigma ~ dunif(0, 10)
+
+  for(i in 1:nSites){
+    for(t in 1:nYears){
+      logit_p[i, t]  ~ dnorm(logit_p_mu, logit_p_tau)
+      logit(p[i, t]) <- logit_p[i, t] 
+    }  
+  }
+  
+  # Population growth rate
+  r_mu ~ dnorm(0, 0.001)
+  r_tau <- 1/(r_sigma * r_sigma)
+  r_sigma ~ dunif(0, 10) 
+  
+  for(t in 1:(nYears-1)){
+    r[t] ~ dnorm(r_mu, r_tau)
+  }
+
+  # Likelihood
+  # State process (abundance)
+  N[1] ~ dpois(lambda)
+  for(t in 2:nYears){
+    N[t] ~ dpois(N[t-1]*exp(r[t-1]))
+  }
+  
+  # Observation process (detection)
+  for (i in 1:nSites){
+    for (t in 1:nYears){
+      for (j in 1:nReps) {  
+        y[i, t, j] ~ dbin(p[i, t], N[t])
+      
+      }
+    }
+  }
+  
+}
