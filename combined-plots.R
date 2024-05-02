@@ -1,91 +1,16 @@
 # Libraries ----
 library(tidyverse)
-<<<<<<< HEAD
-=======
-library(readxl)
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 library(lubridate)
 library(reshape)
 library(gridExtra)
 
 # Juveniles ----
 # . Data read ----
-<<<<<<< HEAD
 juv_haverstraw <- read.csv("data/juv_haverstraw.csv")
-
-=======
-# Maximum number of rows in an Excel file
-n_max <- 1048576
-
-# Data exports from the state-wide fishery database
-sturg_len <- read_xlsx("data/STURG_LENGTHS.xlsx", guess_max = n_max)
-sturg_a <- read_xlsx("data/STURG_A.xlsx", guess_max = n_max)
-sturg_b <- read_xlsx("data/STURG_B.xlsx", guess_max = n_max)
-sturg_n <- read_xlsx("data/STURG_N.xlsx", guess_max = n_max)
-
-
-# .. Juvenile surveys ----
-# Filter swfdb data to get juvenile surveys (program 11) and
-# only Atlantic sturgeon (SPEC = 262)
-juv_a <- filter(sturg_a, PROG == 11)
-juv_b <- filter(sturg_b, PROG == 11 & SPEC == 262)
-juv_n <- filter(sturg_n, PROG == 11)
-
-# . Data manipulation ----
-river_miles <- juv_a[, c("BATCH", "RM", "SHORE", "SET_SAMP")]
-net_sets <- juv_n[, c("BATCH", "DATE", "YEAR", "HABITAT", "LAT_MIDPT", "LONG_MIDPT")]
-fish <- juv_b[, c("BATCH", "NUMBER", "SEX")]
-
-rm_nets <- merge(river_miles, net_sets, by = "BATCH")
-juv_c <- merge(rm_nets, fish, by = "BATCH", all.x = TRUE)
-
-# Check that there are observations in each of the years
-with(juv_c, table(YEAR, NUMBER))
-with(juv_c, table(YEAR, RM))
-
-# Add columns for day of year and name of day
-juv_c$DOY <- yday(juv_c$DATE)
-juv_c$DAY <- wday(juv_c$DATE, label = TRUE)
-
-# Create higher-res sites for expanded design
-juv_c$SITE <- paste0(juv_c$RM, "-", juv_c$SHORE)
-with(juv_c, table(SITE, YEAR))
-
-# Create higher-res reps for expanded design
-juv_c$DOY2 <- paste0(juv_c$DOY, "-", juv_c$SET_SAMP)
-with(juv_c, table(DOY2, YEAR))
-
-juv_c %>% 
-  group_by(YEAR) %>% 
-  summarize(
-    mins = min(DATE),
-    maxes = max(DATE)
-  )
-
-# Data for consistently sampled area
-juv_haverstraw <- juv_c %>% 
-  filter(RM %in% c(35:39) & HABITAT == "SD")%>% 
-  group_by(SITE, YEAR) %>% 
-  mutate(REP = row_number()) %>%
-  ungroup()
-
-# Add zeroes to NA nets before completing RM-YEAR-REP combos
-juv_haverstraw$NUMBER[is.na(juv_haverstraw$NUMBER)] <- 0
-
-juv_haverstraw <- juv_haverstraw %>% 
-  left_join(expand.grid(SITE = unique(juv_haverstraw$SITE), 
-                        YEAR = unique(juv_haverstraw$YEAR),
-                        REP = unique(juv_haverstraw$REP)), .) %>% 
-  fill(SITE) %>% 
-  fill(YEAR) %>% 
-  fill(REP)
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 
 # . Results ----
 # .. Load result file ----
 load("results/juv_posts.rda")
-
-<<<<<<< HEAD
 
 # .. Extract posteriors ----
 jposts <- fit$BUGSoutput$sims.list
@@ -95,72 +20,6 @@ jposts <- fit$BUGSoutput$sims.list
 # . Data read ----
 adult_norrie <- read.csv("data/adult_norrie.csv")
 
-
-=======
-# .. Extract posteriors ----
-jposts <- fit$BUGSoutput$sims.list
-
-# . Model validation
-
-# Adults ----
-
-
-# . Data read ----
-# Add 2010 data for empty nets that were missing from SWFDB
-# A Higgs sent in seperate file 8/1/2023
-adult_2010_empty_nets <- read.csv("data/adult_2010_empty_nets.csv")
-adult_2010_empty_nets$DATE <- as.Date(adult_2010_empty_nets$DATE, format = "%m/%d/%Y")
-
-# .. Adult surveys ----
-# Filter swfdb data to get Adult surveys (program 12) and
-# only Atlantic sturgeon (SPEC = 262)
-adult_a <- filter(sturg_a, PROG == 12)
-adult_b <- filter(sturg_b, PROG == 12 & SPEC == 262)
-adult_n <- filter(sturg_n, PROG == 12)
-
-# . Data manipulation ----
-river_miles <- adult_a[, c("BATCH", "RM", "SHORE", "SET_SAMP", "Habitat")]
-net_sets <- adult_n[, c("BATCH", "DATE", "YEAR", "LAT_MIDPT", "LONG_MIDPT")]
-fish <- adult_b[, c("BATCH", "NUMBER", "SEX")]
-
-rm_nets <- merge(river_miles, net_sets, by = "BATCH")
-adult_c <- merge(rm_nets, fish, by = "BATCH", all.x = TRUE)
-
-# Add 2010 data for empty nets that were missing from SWFDB
-# A Higgs sent in seperate file 8/1/2023
-adult_2010_empty_nets <- read.csv("data/adult_2010_empty_nets.csv")
-adult_2010_empty_nets$DATE <- as.Date(adult_2010_empty_nets$DATE, format = "%m/%d/%Y")
-
-# Combine adult data with empty nets from 2010
-adult_c <- rbind(adult_c, adult_2010_empty_nets)
-
-# Add columns for day of year and name of day
-adult_c$DOY <- yday(adult_c$DATE)
-adult_c$DAY <- wday(adult_c$DATE, label = TRUE)
-
-# TEST SITE IDS
-adult_c$SITE <- adult_c$RM #paste(adult_c$RM, adult_c$SHORE)
-
-# Just get data for Hyde Park reaches during adult sampling 
-# dates.
-adult_norrie <- adult_c %>% 
-  filter(RM %in% c(80, 81, 83), DOY >= 150 & DOY <= 180) %>% 
-  group_by(SITE, YEAR) %>% 
-  mutate(REP = row_number()) %>%
-  ungroup()
-
-# Add zeroes to NA nets before completing RM-YEAR-REP combos
-adult_norrie$NUMBER[is.na(adult_norrie$NUMBER)] <- 0
-
-adult_norrie <- adult_norrie %>% 
-  left_join(expand.grid(SITE = unique(adult_norrie$SITE), 
-                        YEAR = unique(adult_norrie$YEAR),
-                        REP = unique(adult_norrie$REP)), .) %>% 
-  fill(SITE) %>% 
-  fill(YEAR) %>% 
-  fill(REP)
-
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 # . Results ----
 # .. Load result file ----
 load("results/adult_posts.rda")
@@ -170,10 +29,6 @@ load("results/adult_posts.rda")
 posts <- fit$BUGSoutput$sims.list
 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 # Figures for manuscript ----
 # . Figure S1 (posterior checks) ----
 # .. Juveniles ----
@@ -194,13 +49,8 @@ jpeg(filename = "results/FigureS1.jpg",
      res = 300,
      height = 1600, width = 2400)
 
-<<<<<<< HEAD
 jp_check$Survey <- "Juvenile"
 p_check$Survey <- "Adult"
-=======
-jp_check$Survey = "Juvenile"
-p_check$Survey = "Adult"
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 
 p_check_plotter <- rbind(jp_check, p_check)
 p_check_plotter$Survey = factor(p_check_plotter$Survey,
@@ -309,11 +159,8 @@ p$site <- gsub(pattern = "81", replacement = "130", p$site)
 p$site <- gsub(pattern = "82", replacement = "132", p$site)
 p$site <- gsub(pattern = "83", replacement = "134", p$site)
 
-<<<<<<< HEAD
+
 p$site <- paste(p$site, "  ")
-=======
-p$site <- paste(p$site, "  ") # check out padding from stringr
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 
 p <- p %>%
   group_by(site, year) %>%
@@ -439,11 +286,8 @@ figure3b <- ggplot(n_plotter, aes(x = year, y = fit)) +
   scale_x_continuous(limits = c(2004, 2023)) +
   scale_y_continuous(limits = c(0, 3500)) +
   annotate("text", x = 2004, y = 3250, label = "(b)") +
-<<<<<<< HEAD
   geom_point(aes(x = 2013.75, y = 466)) +
   geom_linerange(aes(x = 2013.75, xmax = 2013.75, ymin = 310, ymax = 745)) +
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
   xlab("Year") +
   ylab("Relative abundance") +
   theme_bw() +
@@ -460,10 +304,8 @@ jpeg(filename = "results/Figure3.jpg",
 gridExtra::grid.arrange(figure3a, figure3b, nrow = 2)
 
 dev.off()
-<<<<<<< HEAD
 
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
+
 # Population growth rate ----
 # . Juveniles ----
 j_growth <- jn_plotter %>% mutate(
@@ -475,7 +317,6 @@ j_growth <- jn_plotter %>% mutate(
 mean(j_growth$fit, na.rm = TRUE)
 quantile(j_growth$fit, c(0.025, 0.975), na.rm = TRUE)
 
-<<<<<<< HEAD
 # . Adults ----
 growth <- n_plotter %>% mutate(
   fit = log(fit/lag(fit)),
@@ -488,5 +329,3 @@ quantile(growth$fit, c(0.025, 0.975), na.rm = TRUE)
 
 quantile(growth$fit, c(.16), na.rm = TRUE)
 
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
