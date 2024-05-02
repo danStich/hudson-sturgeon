@@ -19,11 +19,7 @@ p <- p %>%
 p <- as.matrix(p[, 2:ncol(p)])
 dimnames(p) <- NULL
 
-<<<<<<< HEAD
 # . Population abundance ----
-=======
-# . Population growth ----
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 n <- melt(posts$N)
 names(n) <- c("iteration", "year", "value")
 n <- n %>% 
@@ -34,10 +30,7 @@ n <- n %>%
 # . Starting abundance (lambda) ----
 lambda <- median(posts$lambda)
 
-<<<<<<< HEAD
 
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 # . Population growth rate (r) ----
 r <- mean(posts$r_mu)
 
@@ -50,20 +43,14 @@ sim_fun <- function(idx){
   n_sites <- 3
   n_reps <- 30
   
-<<<<<<< HEAD
-  
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
+
   # .. Parameter values ----
   # Use mean value of each parameter to generate capture histories
   lambda_sim <- lambda
   p_sim <- matrix(mean(p), nrow = n_sites, ncol = n_years)
   r_sim <- r
 
-<<<<<<< HEAD
-  
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
+
   # . Data simulation ----
   # .. Abundance ----
   # True local abundance at each site in each year
@@ -83,10 +70,7 @@ sim_fun <- function(idx){
   # True abundance in the whole study area each year
   n_true <- N
   
-<<<<<<< HEAD
-  
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
+
   # .. Detection array ----
   # Catch matrix
   y <- array(NA, c(n_sites, n_years, n_reps))
@@ -106,10 +90,7 @@ sim_fun <- function(idx){
                     nReps = n_reps,
                     y = y)
   
-<<<<<<< HEAD
-  
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
+
   # .. Initial values ----
   z <- apply(y, 2, max, na.rm = TRUE)
   z <- z + 10
@@ -121,17 +102,11 @@ sim_fun <- function(idx){
     )
   }
   
-<<<<<<< HEAD
   
   # .. Parameters monitored----
   params <- c("N", "p", "lambda", "logit_p_mu", "r", "r_mu")
   
   
-=======
-  # .. Parameters monitored----
-  params <- c("N", "p", "lambda", "logit_p_mu", "r", "r_mu")
-  
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
   # .. Compile model ----
   sim_fit <- jags(jags.data, inits = inits,
              parameters.to.save = params,
@@ -139,18 +114,12 @@ sim_fun <- function(idx){
              n.chains = 3, n.iter = 1000,
              n.burnin = 500, n.thin = 5)
   
-<<<<<<< HEAD
-  
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
+
   # .. Parameter estimates ----
   # Estimated posteriors as a list
   posts_est <- sim_fit$BUGSoutput$sims.list
   
-<<<<<<< HEAD
-  
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
+
   # .. Abundance ----
   n_est <- melt(posts_est$N)
   names(n_est) <- c("iteration", "year", "N")
@@ -159,10 +128,7 @@ sim_fun <- function(idx){
     group_by(year) %>%
     summarize(n_obs = median(N))
   
-<<<<<<< HEAD
-  
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
+
   # Detection ----
   p_est <- melt(posts_est$p)
   names(p_est) <- c("iteration", "site", "year", "p")
@@ -179,10 +145,7 @@ sim_fun <- function(idx){
   # Difference between estimated and true abundance
   bias <- n_est$n_obs - n_true
 
-<<<<<<< HEAD
-  
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
+
   # . Output ----
   out <- data.frame("n_est" = n_est$n_obs, 
                     "n_true" = as.vector(n_true), 
@@ -209,18 +172,12 @@ sim_fun <- function(idx){
 # most PCs have 4-8 virtual cores (cpus x 2)
 sfInit(parallel=TRUE, cpus=10, type="SOCK")
 
-<<<<<<< HEAD
 
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 # . Export data ----
 # Export data needed for simulation to workers from global env
 sfExport(list = c("p", "lambda", "r"))
 
-<<<<<<< HEAD
 
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 # . Export libraries ----
 # Load R packages on workers
 sfLibrary(R2jags)
@@ -231,19 +188,13 @@ sfLibrary(tidyverse)
 # . Number of iterations ----
 niterations <- 10
 
-<<<<<<< HEAD
 
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 # . Run simulation ----
 # Store and print start time
 start <- Sys.time()
 start
 
-<<<<<<< HEAD
 
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 # Distribute job to workers
 res <- sfLapply(1:niterations, sim_fun)
 
@@ -254,38 +205,25 @@ total_time
 # Stop snowfall
 sfStop()
 
-<<<<<<< HEAD
 
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 # Results ----
 # . Extract output ----
 results <- do.call(rbind, res)
 
-<<<<<<< HEAD
 
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 # . Save to a file ----
 # save(results, file = "results/adult_sim_results.rda")
 load("results/adult_sim_results.rda")
 
-<<<<<<< HEAD
 
-=======
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 # . Descriptive statistics for bias ----
 bias_median <- median(results$bias)
 bias_quants <- unname(quantile(results$bias, c(0.025, 0.975)))
 bias_median
 bias_quants
 
-<<<<<<< HEAD
 
-# . Quick plots of bias (Figure S2) ----
-=======
 # . Quick plots of bias (Figure S3) ----
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 hist <- ggplot(results, aes(x = bias)) +
   geom_histogram(bins = 300) +
   geom_vline(xintercept = bias_median, color = "blue") +
@@ -297,7 +235,6 @@ hist <- ggplot(results, aes(x = bias)) +
 bias_dir <- ggplot(results, aes(x = n_true, y = n_est)) + 
   geom_point() + 
   geom_smooth(method = "lm") +
-<<<<<<< HEAD
   xlab(expression(paste(italic("N")[true]))) +
   ylab(expression(paste(italic("N")[estimated]))) +
   annotate("text", x = 0, y = 500, label = "(b)") +
@@ -308,13 +245,6 @@ check_year <- results %>%
   summarize(fit = mean(bias),
             lwr = quantile(bias, 0.025),
             upr = quantile(bias, 0.975))
-=======
-  xlab(expression(paste("N"[true]))) +
-  ylab(expression(paste("N"[estimated]))) +
-  annotate("text", x = 0, y = 500, label = "(b)") +
-  scale_y_continuous(limits = c(0,600))
-
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 
 line_year <- ggplot(check_year, aes(x = year, y = fit)) +
   geom_ribbon(aes(xmax = year, ymin = lwr, ymax = upr, color = NULL),
@@ -325,7 +255,6 @@ line_year <- ggplot(check_year, aes(x = year, y = fit)) +
   annotate("text", x = 0, y = -250, label = "(c)") +
   scale_y_continuous(limits = c(-1600, 0))
 
-<<<<<<< HEAD
 check_n <- results %>% 
   group_by(year) %>% 
   summarize(fit = mean(bias),
@@ -341,29 +270,14 @@ point_n <- ggplot(results, aes(x = n_true, y = bias)) +
   scale_y_continuous(limits = c(-1600, 0))
 
 jpeg("results/FigureS2.jpg",
-=======
-point_n <- ggplot(check_n, aes(x = n_true, y = fit)) +
-  geom_point() +
-  geom_smooth() +
-  ylab("Bias") +
-  xlab(expression(paste("N"[true]))) +
-  annotate("text", x = 0, y = -250, label = "(d)") +
-  scale_y_continuous(limits = c(-1600, 0))
-
-jpeg("results/FigureS3.jpg",
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
      res = 300,
      width = 2000, 
      height = 2000)
 gridExtra::grid.arrange(hist, bias_dir, line_year, point_n)
 dev.off()
 
-<<<<<<< HEAD
 
 # . Parameter bias (Figure S3) ----
-=======
-# . Parameter bias (Figure S4) ----
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 results$p_bias <- results$p_est - results$p_sim
 results$lambda_bias <- results$lambda_est - results$lambda_sim
 results$r_bias <- results$r_est - results$r_sim
@@ -383,11 +297,7 @@ r_bias_plot <- ggplot(results, aes(x = p_bias, y = r_bias)) +
   xlab(expression(paste(italic(p)["Bias"]))) +
   ylab(expression(paste(italic(r)["Bias"])))
 
-<<<<<<< HEAD
 jpeg("results/FigureS3.jpg",
-=======
-jpeg("results/FigureS4.jpg",
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
      res = 300,
      width = 2000, 
      height = 2400)
@@ -395,11 +305,8 @@ gridExtra::grid.arrange(lambda_bias_plot, r_bias_plot)
 dev.off()
 
 
-<<<<<<< HEAD
+
 # Check patterns for n_true and n_est (Figure S4) ----
-=======
-# Check patterns for n_true and n_est (Figure S5) ----
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
 check_pat <- results %>%
   group_by(year) %>%
   summarize(fit = median(n_est),
@@ -413,35 +320,21 @@ n_est <- ggplot(check_pat, aes(x = year, y = fit)) +
   geom_ribbon(aes(xmax = year, ymin = lwr, ymax = upr, color = NULL),
               alpha = 0.1) +
   geom_line() +
-<<<<<<< HEAD
   ylab(expression(paste(italic("N")[estimated]))) +
-=======
-  ylab(expression(paste("N"[estimated]))) +
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
   xlab("Year")
 
 n_true <- ggplot(check_pat, aes(x = year, y = fit2)) +
   geom_ribbon(aes(xmax = year, ymin = lwr2, ymax = upr2, color = NULL),
               alpha = 0.1) +
   geom_line() +
-<<<<<<< HEAD
+
   ylab(expression(paste(italic("N")[true]))) +
   xlab("Year")
 
 jpeg("results/FigureS4.jpg",
-=======
-  ylab(expression(paste("N"[true]))) +
-  xlab("Year")
-
-jpeg("results/FigureS5.jpg",
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
      res = 300,
      width = 2000, 
      height = 2000)
 gridExtra::grid.arrange(n_est, n_true)
 dev.off()
 
-<<<<<<< HEAD
-=======
-
->>>>>>> b0137a1f65d9f3536ef4e4b6062042d788200ae0
