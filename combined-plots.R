@@ -10,7 +10,7 @@ juv_haverstraw <- read.csv("data/juv_haverstraw.csv")
 
 # . Results ----
 # .. Load result file ----
-load("results/juv_posts.rda")
+load("results/juv_posts_poisson_itit.rda")
 
 # .. Extract posteriors ----
 jposts <- fit$BUGSoutput$sims.list
@@ -22,7 +22,7 @@ adult_norrie <- read.csv("data/adult_norrie.csv")
 
 # . Results ----
 # .. Load result file ----
-load("results/adult_posts.rda")
+load("results/adult_posts_poisson_itt.rda")
 
 
 # .. Extract posteriors ----
@@ -34,14 +34,18 @@ posts <- fit$BUGSoutput$sims.list
 # .. Juveniles ----
 # Get sums of observed and simulated values from posteriors
 jp_check <- data.frame(
-  y = melt(jposts$sum_y)$value,
-  y_rep = melt(jposts$sum_y_rep)$value)
+  E = melt(jposts$sum_E)$value,
+  E_rep = melt(jposts$sum_E_rep)$value)
+
+mean(jp_check$E > jp_check$E_rep)
 
 # .. Adults ----
 # Get fitted and predicted values from posteriors
 p_check <- data.frame(
-  y = melt(posts$sum_y)$value,
-  y_rep = melt(posts$sum_y_rep)$value)
+  E = melt(posts$sum_E)$value,
+  E_rep = melt(posts$sum_E_rep)$value)
+
+mean(p_check$E > p_check$E_rep)
 
 # .. Plot ----
 # predicted vs fitted with a 1:1 line
@@ -59,10 +63,10 @@ p_check_plotter$Survey = factor(p_check_plotter$Survey,
 dat_text <- data.frame(
   label = c("(a)", "(b)"),
   Survey  = factor(c("Juvenile", "Adult")),
-  x = c(29000, 5000),
-  y = c(34000, 25000))
+  x = c(5200, 1100),
+  y = c(6400, 1800))
 
-ggplot(p_check_plotter, aes(x = y, y = y_rep)) +
+ggplot(p_check_plotter, aes(x = E, y = E_rep)) +
   geom_point(alpha = 0.05) +
   geom_abline(intercept = 0, slope = 1) +
   ylab("") +
@@ -81,7 +85,7 @@ dev.off()
 # .. Juveniles ----
 # Get posteriors for p
 jpp <- melt(jposts$p)
-names(jpp) <- c("iteration", "site", "year", "value")
+names(jpp) <- c("iteration", "site", "year", "rep", "value")
 
 # Assign text labels from original data to column labels in posts
 jpp$site <- sort(unique(juv_haverstraw$SITE))[jpp$site]
@@ -104,16 +108,17 @@ jp <- jpp %>%
             lwr = quantile(value, 0.025),
             upr = quantile(value, 0.975))
 
-figure2a <- ggplot(jp, aes(x = year, y = fit, color = site)) +
-  geom_point(position = position_dodge2(width = .5)) +
-  geom_linerange(aes(xmax = year, ymin = lwr, ymax = upr),
-                 position = position_dodge2(width = .5)) +
+figure2a <- ggplot(jp, aes(x = year, y = fit)) +
+  geom_point() +
+  geom_linerange(aes(xmax = year, ymin = lwr, ymax = upr)) +
   geom_linerange(aes(xmax = year, ymin = lwr, ymax = upr)) +
   scale_color_grey() +
   labs(color = "Site") +
-  scale_x_continuous(limits = c(2003, 2022.5)) +
-  scale_y_continuous(limits = c(0, 0.035)) +
-  annotate("text", x = 2003.75, y = .0325, label = "(a)") +  
+  scale_x_continuous(limits = c(2003, 2022.5),
+                     breaks = c(2005, 2020),
+                     labels = c(2005, 2020)) +
+  # scale_y_continuous(limits = c(0, 0.035)) +
+  # annotate("text", x = 2003.75, y = .0325, label = "(a)") +  
   xlab("") +
   ylab(expression(paste(
     "Individual detection probability (", italic(p["i, t"]), ")"))) +
@@ -121,8 +126,11 @@ figure2a <- ggplot(jp, aes(x = year, y = fit, color = site)) +
   theme(axis.title.x = element_text(vjust = 3),
         axis.title.y = element_text(vjust = 2),
         text = element_text(size = 12),
-        legend.background = element_blank())  
+        legend.background = element_blank(),
+        panel.spacing.x = unit(0.5, "lines")) +
+  facet_wrap(~site, nrow = 1)
 
+figure2a
 
 # ... Descriptive statistics ----
 # Overall mean and 95% CRI
@@ -136,7 +144,7 @@ jpp %>%
             lwr = quantile(value, 0.025),
             upr = quantile(value, 0.975))
 
-# Means and CRIs by year
+# Means and CRIs by site
 jpp %>%
   group_by(site) %>%
   summarize(fit = mean(value),
@@ -146,36 +154,37 @@ jpp %>%
 
 # .. Adults ----
 # Get posteriors for p
-p <- melt(posts$p)
-names(p) <- c("iteration", "site", "year", "value")
+pp <- melt(posts$p)
+names(pp) <- c("iteration", "site", "year", "rep", "value")
 
 # Assign text labels from original data to column labels in posts
-p$site <- sort(unique(adult_norrie$SITE))[p$site]
-p$year <- sort(unique(adult_norrie$YEAR))[p$year]
+pp$site <- sort(unique(adult_norrie$SITE))[pp$site]
+pp$year <- sort(unique(adult_norrie$YEAR))[pp$year]
 
 # Replace river mile with river kilometer for paper
-p$site <- gsub(pattern = "80", replacement = "129", p$site)
-p$site <- gsub(pattern = "81", replacement = "130", p$site)
-p$site <- gsub(pattern = "82", replacement = "132", p$site)
-p$site <- gsub(pattern = "83", replacement = "134", p$site)
+pp$site <- gsub(pattern = "80", replacement = "129", pp$site)
+pp$site <- gsub(pattern = "81", replacement = "130", pp$site)
+pp$site <- gsub(pattern = "82", replacement = "132", pp$site)
+pp$site <- gsub(pattern = "83", replacement = "134", pp$site)
 
 
-p$site <- paste(p$site, "  ")
+pp$site <- paste("River kilometer", pp$site)
 
-p <- p %>%
+p <- pp %>%
   group_by(site, year) %>%
   summarize(fit = mean(value),
             lwr = quantile(value, 0.025),
             upr = quantile(value, 0.975))
 
-figure2b <- ggplot(p, aes(x = year, y = fit, color = site)) +
-  geom_point(position = position_dodge2(width = .5)) +
-  geom_linerange(aes(xmax = year, ymin = lwr, ymax = upr),
-                 position = position_dodge2(width = .5)) +
+figure2b <- ggplot(p, aes(x = year, y = fit)) +
+  geom_point() +
+  geom_linerange(aes(xmax = year, ymin = lwr, ymax = upr)) +
   scale_color_grey() +
   labs(color = "Site") +
-  scale_x_continuous(limits = c(2003, 2022.5)) +
-  annotate("text", x = 2003.75, y = .081, label = "(b)") +    
+  scale_x_continuous(limits = c(2003, 2022.5),
+                     breaks = c(2005, 2010, 2015, 2020),
+                     labels = c(2005, 2010, 2015, 2020)) +
+  # annotate("text", x = 2003.75, y = .081, label = "(b)") +    
   xlab("Year") +
   ylab(expression(paste(
     "Individual detection probability (", italic(p["i, t"]), ")"))) +
@@ -183,23 +192,43 @@ figure2b <- ggplot(p, aes(x = year, y = fit, color = site)) +
   theme(axis.title.x = element_text(vjust = -1),
         axis.title.y = element_text(vjust = 2),
         text = element_text(size = 12),
-        legend.background = element_blank())  
+        legend.background = element_blank()) +
+  facet_wrap(~site, nrow = 1)
 
+figure2b
 
-# .. Plot ----
+# ... Plot ----
 jpeg(filename = "results/Figure2.jpg",
      res = 300,
-     height = 2400, width = 2400)
+     height = 2400, width = 2800)
 
 gridExtra::grid.arrange(figure2a, figure2b, nrow = 2)
 
 dev.off()
 
+# ... Descriptive statistics ----
+# Overall mean and 95% CRI
+mean(posts$p)
+quantile(posts$p, c(0.025, 0.975))
+
+# Means and CRIs by year
+pp %>%
+  group_by(year) %>%
+  summarize(fit = mean(value),
+            lwr = quantile(value, 0.025),
+            upr = quantile(value, 0.975))
+
+# Means and CRIs by site
+pp %>%
+  group_by(site) %>%
+  summarize(fit = mean(value),
+            lwr = quantile(value, 0.025),
+            upr = quantile(value, 0.975))
 
 # . Figure 3 ----
 # .. Juveniles ----
 # Extract posterior samples for abundance from fitted model
-jn_mat <- melt(jposts$N)
+jn_mat <- melt(jposts$n_total)
 names(jn_mat) <- c("iteration", "year", "n")
 jn_mat$year <- unique(juv_haverstraw$YEAR)[jn_mat$year]
 
@@ -228,8 +257,7 @@ figure3a <- ggplot(jn_plotter, aes(x = year, y = fit)) +
   geom_ribbon(aes(xmax = year, ymin = Q2, ymax = Q3, color = NULL),
               alpha = 0.25) +
   scale_x_continuous(limits = c(2004, 2023)) +
-  scale_y_continuous(limits = c(0, 2500)) +
-  annotate("text", x = 2004, y = 2400, label = "(a)") +
+  annotate("text", x = 2004, y = 790, label = "(a)") +
   xlab("") +
   ylab("Relative abundance") +
   theme_bw() +
@@ -237,10 +265,12 @@ figure3a <- ggplot(jn_plotter, aes(x = year, y = fit)) +
         axis.title.y = element_text(vjust = 3),
         text = element_text(size = 12))  
 
+figure3a
+
 # Descriptive statistics
 # Overall mean and 95% CRI
-mean(jposts$N)
-quantile(jposts$N, c(0.025, 0.975))
+mean(jposts$n_total)
+quantile(jposts$n_total, c(0.025, 0.975))
 
 # Means and CRIs by year
 jn_mat %>%
@@ -255,9 +285,9 @@ quantile(jn_plotter$fit[jn_plotter$year >= 2019], c(0.025, 0.975))
 
 # .. Adults ----
 # Extract posterior samples for abundance from fitted model
-n_mat <- melt(posts$N)
+n_mat <- melt(posts$n_total)
 names(n_mat) <- c("iteration", "year", "n")
-n_mat$year <- unique(adult_norrie$YEAR)[n_mat$year]
+n_mat$year <- sort(unique(adult_norrie$YEAR))[n_mat$year]
 
 # Summarize posteriors by year
 n_plotter <- n_mat %>%
@@ -269,13 +299,6 @@ n_plotter <- n_mat %>%
     Q3 = quantile(n, 0.75),
     upr = quantile(n, 0.975))
 
-# Mean observed catch
-observed <- adult_norrie %>%
-  group_by(YEAR) %>%
-  summarize(obs = mean(NUMBER, na.rm = TRUE)) %>% 
-  mutate(predicted = n_plotter$fit)
-names(observed) <- c("year", "mean", "fit")
-
 # Plot
 figure3b <- ggplot(n_plotter, aes(x = year, y = fit)) +
   geom_line() +
@@ -284,16 +307,27 @@ figure3b <- ggplot(n_plotter, aes(x = year, y = fit)) +
   geom_ribbon(aes(xmax = year, ymin = Q2, ymax = Q3, color = NULL),
               alpha = 0.25) +
   scale_x_continuous(limits = c(2004, 2023)) +
-  scale_y_continuous(limits = c(0, 3500)) +
-  annotate("text", x = 2004, y = 3250, label = "(b)") +
-  geom_point(aes(x = 2013.75, y = 466)) +
-  geom_linerange(aes(x = 2013.75, xmax = 2013.75, ymin = 310, ymax = 745)) +
+  annotate("text", x = 2004, y = 490, label = "(b)") +
   xlab("Year") +
   ylab("Relative abundance") +
   theme_bw() +
   theme(axis.title.x = element_text(vjust = -1),
         axis.title.y = element_text(vjust = 3),
         text = element_text(size = 12))  
+
+figure3b
+
+# Descriptive statistics
+# Overall mean and 95% CRI
+mean(posts$n_total)
+quantile(posts$n_total, c(0.025, 0.975))
+
+# Means and CRIs by year
+n_mat %>%
+  group_by(year) %>%
+  summarize(fit = mean(n),
+            lwr = quantile(n, 0.025),
+            upr = quantile(n, 0.975))
 
 
 # .. Plot ----
@@ -327,5 +361,5 @@ growth <- n_plotter %>% mutate(
 mean(growth$fit, na.rm = TRUE)
 quantile(growth$fit, c(0.025, 0.975), na.rm = TRUE)
 
-quantile(growth$fit, c(.16), na.rm = TRUE)
+quantile(growth$fit, c(.50), na.rm = TRUE)
 

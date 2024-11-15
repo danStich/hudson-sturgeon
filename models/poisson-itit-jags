@@ -1,0 +1,75 @@
+model {
+  
+  # Priors
+  # Individual detection probability
+  logit_p_mu ~ dnorm(0, 0.1)
+  logit_p_tau <- 1/(logit_p_sigma * logit_p_sigma)
+  logit_p_sigma ~ dunif(0, 10)
+
+  for(i in 1:nSites){
+    for(t in 1:nYears){
+      for(j in 1:nReps){
+        logit_p[i, t, j]  ~ dnorm(logit_p_mu, logit_p_tau)
+        logit(p[i, t, j]) <- logit_p[i, t, j]
+      }
+    }  
+  }
+  
+  
+  # Abundance
+  # Hyper priors
+  log_lambda ~ dnorm(0, 1)
+  log_lambda_tau <- 1/(log_lambda_sd * log_lambda_sd) 
+  log_lambda_sd ~ dunif(0, 3) 
+
+  # Likelihood
+  # State process (abundance)
+  for(i in 1:nSites){
+    for(t in 1:nYears){
+      N[i, t] ~ dpois(lambdap[i, t])
+      log(lambdap[i, t]) <- log_lambdap[i, t]
+      log_lambdap[i, t] ~ dnorm(log_lambda, log_lambda_tau)
+    }
+  }
+  
+  # Observation process (detection)
+  for (i in 1:nSites){
+  
+    for (t in 1:nYears){
+      for (j in 1:nReps) {  
+        y[i, t, j] ~ dbin(p[i, t, j], N[i, t])
+        
+        # Posterior predictive fit
+        # Expected count given vector of model parameters
+        exp[i, t, j] <- N[i, t] * p[i, t, j]
+        
+        # Discrepency between observation and expectation
+        E[i, t, j] <- pow((y[i, t, j] - exp[i, t, j]), 2)/(exp[i, t, j] + .5) 
+        
+        # Simulated response from posterior distribution
+        y_rep[i, t, j] ~ dbin(p[i, t, j],  N[i, t])
+        
+        # Discrepency between simulated response and expectation
+        E_rep[i, t, j] <- pow((y_rep[i, t, j] - exp[i, t, j]), 2)/(exp[i, t, j] + .5)
+        
+        # Is the discrepency for simulated data larger than for the response?
+        p_i[i, t, j] <- E_rep[i, t, j] > E[i, t, j]
+        
+      }
+      
+    }
+    
+  }
+  
+  for(t in 1:nYears){
+    n_total[t] <- sum(N[, t])
+  }
+  
+  # Summaries of observed and simulated data
+  sum_y <- sum(y[,,])
+  sum_y_rep <- sum(y_rep[,,])
+  sum_E <- sum(E[,,])
+  sum_E_rep <- sum(E_rep[,,])
+  bayesian_p_mean <- mean(p_i[,,])
+  
+}
