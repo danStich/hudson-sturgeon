@@ -29,8 +29,7 @@ jags.data <- list(nSites = length(unique(juv_haverstraw$SITE)),
                   y = caps)
 
 # . Parameters monitored----
-params <- c("n_total", "N", "p", "logit_p_mu",
-            "sum_E", "sum_E_rep")
+params <- c("n_total", "N", "p", "lambdap", "sum_E", "sum_E_rep")
 
 # . Initial values ----
 n_init <- caps[,,1]

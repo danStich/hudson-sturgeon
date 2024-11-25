@@ -151,6 +151,9 @@ jpp %>%
             lwr = quantile(value, 0.025),
             upr = quantile(value, 0.975))
 
+# Means and CRIs by site and year
+jp[jp$fit==max(jp$fit), ]
+jp[jp$fit==min(jp$fit), ]
 
 # .. Adults ----
 # Get posteriors for p

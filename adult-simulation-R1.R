@@ -204,7 +204,7 @@ results <- do.call(rbind, res)
 
 # . Save to a file ----
 # save(results, file = "results/adult_sim_results_poisson.rda")
-# load("results/adult_sim_results_poisson.rda")
+load("results/adult_sim_results_poisson.rda")
 
 
 # . Descriptive statistics for bias ----
@@ -224,7 +224,7 @@ hist <- ggplot(results, aes(x = bias)) +
 
 bias_dir <- ggplot(results, aes(x = n_true, y = n_est)) + 
   geom_point() + 
-  geom_abline(aes(slope = 1, intercept = 0)) +
+  geom_abline(aes(slope = 1, intercept = 0), color = "blue") +
   xlab(expression(paste(italic("N")[true]))) +
   ylab(expression(paste(italic("N")[estimated]))) +
   annotate("text", x = 0, y = 925, label = "(b)")
@@ -268,6 +268,7 @@ results$p_bias <- results$p_est - results$p_sim
 results$lambda_bias <- results$lambda_est - results$lambda_sim
 
 lambda_bias_mean <- mean(results$lambda_bias)
+
 lambda_bias_plot <- ggplot(results, aes(x = p_bias, y = lambda_bias)) +
   geom_point(alpha = 0.05) +
   geom_hline(yintercept = lambda_bias_mean, linetype = 2) +
@@ -285,8 +286,8 @@ jpeg("results/FigureS3.jpg",
      res = 300,
      width = 2000, 
      height = 2400)
- 
-lambda_bias_plot
+
+print(lambda_bias_plot)
  
 dev.off()
 
