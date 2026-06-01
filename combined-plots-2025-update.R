@@ -301,7 +301,7 @@ juvenile_posts_year <- jn_mat %>%
             lwr = quantile(n, 0.025),
             upr = quantile(n, 0.975))
 
-write.table(juvenile_posts_year, "juvenile_posts_year.csv",
+write.table(juvenile_posts_year, "results/juvenile_posts_year_2025.csv",
             sep = ",", row.names = FALSE, quote = FALSE)
 
 
@@ -356,7 +356,7 @@ adult_posts_year <- n_mat %>%
             lwr = quantile(n, 0.025),
             upr = quantile(n, 0.975))
 
-write.table(adult_posts_year, "adult_posts_year.csv",
+write.table(adult_posts_year, "results/adult_posts_year_2025.csv",
             sep = ",", row.names = FALSE, quote = FALSE)
 
 # .. Plot ----
