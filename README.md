@@ -16,16 +16,20 @@ Updated data, scripts, and results for the 2025 NY Bight Management meeting with
 
 
 ## Rscripts
+### Adult empirical analyses
 `adult-empirical-poisson.R` Runs adult Atlantic Sturgeon N-mixture models using input from `data/` folder and saves output to `results/` folder.
 
 `adult-empirical-poisson-2025-update.R` Updated analysis through 2025 for ASMFC (2026).
 
 `adult-data-update.R` Stand-alone script for updating adult data for NY Bight and ASMFC needs.
 
+### Juvenile empirical analyses
+
 `juvenile-empirical-poisson.R` Runs juvenile Atlantic Sturgeon N-mixture models using input from `data/` folder and saves output to `results/` folder.
 
 `juvenile-empirical-poisson-2025-update.R` Updated analysis through 2025 for ASMFC (2026).
 
+### Adult simulation
 `adult-simulation-R1.R` Contains code for conducting simulation-estimation validation of the statistical models based on estimates of adult Atlantic sturgeon for abundance, detection, and population growth estimated from empirical models. Also contains code for processing results and reproducing supplemental figures.
 
 `adult-simulation-R1-bight-meeting.R` Updated script for 2025 NY Bight meeting for running/testing locally.
