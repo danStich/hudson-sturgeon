@@ -2,6 +2,9 @@
 Hudson River Atlantic Sturgeon Abundance Indices
 
 ## Files
+### 2025 Update for ASMFC
+Note that updated data and results for ASMFC (2026) that include data through 2025 are appended with `_2025` where applicable. 
+
 `adult-empirical-analysis.R` Runs adult Atlantic Sturgeon N-mixture models using input from `data/` folder and saves output to `results/` folder.
 
 `adult-empirical-analysis.R` Runs juvenile Atlantic Sturgeon N-mixture models using input from `data/` folder and saves output to `results/` folder.
