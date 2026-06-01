@@ -5,49 +5,40 @@ library(R2jags)
 library(snowfall)
 
 
-# Empirical estimates ----
-load("results/adult_posts_poisson_itt.rda")
-posts <- fit$BUGSoutput$sims.list
-names(posts)
-
-
-# . Individual detection probability (p) ----
-p <- melt(posts$p)
-names(p) <- c("iteration", "site", "year", "rep", "value")
-p <- p %>% 
-  group_by(site, year, rep) %>% 
-  summarize(fit = median(value))
-p <- reshape::cast(p, site ~ year ~ rep)
-
-
-# . Population abundance ----
-n <- melt(posts$N)
-names(n) <- c("iteration", "site", "year", "value")
-n <- n %>% 
-  group_by(site, year) %>% 
-  summarize(fit = median(value))
-
-
-# . Annual abundance (lambda) ----
-lambda <- melt(posts$lambda)
-names(lambda) <- c("iteration", "year", "value")
-lambda <- lambda %>% 
-  group_by(year) %>% 
-  summarize(fit = round(median(value)))
-
-
 # Simulation function ----
 sim_fun <- function(idx){
+  
+  
   # . Simulation settings ----
+  
+  
+  # .. Empirical estimates ----
+  
+  
+  # ... Individual detection probability (p) ----
+  # Overall mean from Stich et al. (2025)
+  p <- 0.068
+  
+  
+  # ... Population abundance ----
+  # Overall mean from Stich et al. (2025)
+  n <- 30
+  
+  
+  # ... Annual abundance (lambda) ----
+  # Overall mean from Stich et al. (2025)
+  lambda <- 30
+  
+  
   # .. Design considerations ----
-  n_years <- nrow(lambda)
+  n_years <- 30
   n_sites <- 3
-  n_reps <- 10
+  n_reps <- sample(c(1, 5, 10, 15, 20, 25, 30), 1, replace = TRUE)
   
 
   # .. Parameter values ----
   # Use mean value of each parameter to generate capture histories
-  lambda_sim <- lambda$fit
+  lambda_sim <- lambda
   p_sim <- p
   
 
@@ -59,7 +50,7 @@ sim_fun <- function(idx){
   # Population change from year 2 through n_years
   for(i in 1:n_sites){
     for(t in 1:n_years) {
-      N[i, t] <- rpois(n = 1, lambda = lambda_sim[t])
+      N[i, t] <- rpois(n = 1, lambda = lambda_sim)
     }
   }
   
@@ -73,7 +64,7 @@ sim_fun <- function(idx){
   for(i in 1:n_sites) {
     for(t in 1:n_years) {
       for(j in 1:n_reps) {
-        y[i, t, j] <- rbinom(n = 1, size = N[t], prob = p_sim[i, t, j])          
+        y[i, t, j] <- rbinom(n = 1, size = N[t], prob = p_sim)          
       }
     }
   }
@@ -99,6 +90,7 @@ sim_fun <- function(idx){
     )
   }  
   
+  
   # .. Parameters monitored----
   params <- c("n_total", "N", "lambdap", "p", "logit_p_mu")
   
@@ -106,7 +98,7 @@ sim_fun <- function(idx){
   # .. Compile model ----
   sim_fit <- jags(jags.data, inits = inits,
              parameters.to.save = params,
-             model.file = "models/poisson-itt-jags",
+             model.file = "models/poisson-itt-jags-bight-sim",
              n.chains = 3, n.iter = 10000,
              n.burnin = 1000, n.thin = 10)
   
@@ -161,7 +153,7 @@ sim_fun <- function(idx){
 # . Initialize snowfall ----
 # Initialize snowfall using number of virtual threads minus one
 # most PCs have 4-8 virtual cores (cpus x 2)
-sfInit(parallel=TRUE, cpus=10, type="SOCK")
+sfInit(parallel = TRUE, cpus = 10, type = "SOCK")
 
 
 # . Export data ----
@@ -256,12 +248,12 @@ point_n <- ggplot(results, aes(x = n_true, y = bias)) +
   xlab(expression(paste(italic("N")[true])))  +
   annotate("text", x = 5, y = 850, label = "(d)")
 
-jpeg("results/FigureS2.jpg",
-     res = 300,
-     width = 2000,
-     height = 2000)
+# jpeg("results/FigureS2.jpg",
+#      res = 300,
+#      width = 2000,
+#      height = 2000)
 gridExtra::grid.arrange(hist, bias_dir, line_year, point_n)
-dev.off()
+# dev.off()
 
 # . Parameter bias (Figure S3) ----
 results$p_bias <- results$p_est - results$p_sim
@@ -282,14 +274,14 @@ lambda_bias_plot <- ggplot(results, aes(x = p_bias, y = lambda_bias)) +
 #   xlab(expression(paste(italic(p)["Bias"]))) +
 #   ylab(expression(paste(italic(r)["Bias"])))
 
-jpeg("results/FigureS3.jpg",
-     res = 300,
-     width = 2000, 
-     height = 2400)
-
+# jpeg("results/FigureS3.jpg",
+#      res = 300,
+#      width = 2000, 
+#      height = 2400)
+# 
 print(lambda_bias_plot)
- 
-dev.off()
+#  
+# dev.off()
 
 
 # Check patterns for n_true and n_est (Figure S4) ----
@@ -316,10 +308,10 @@ n_true <- ggplot(check_pat, aes(x = year, y = fit2)) +
   ylab(expression(paste(italic("N")[true]))) +
   xlab("Year")
 
-jpeg("results/FigureS4.jpg",
-     res = 300,
-     width = 2000,
-     height = 2000)
+# jpeg("results/FigureS4.jpg",
+#      res = 300,
+#      width = 2000,
+#      height = 2000)
 gridExtra::grid.arrange(n_est, n_true)
-dev.off()
+# dev.off()
 
